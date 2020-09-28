@@ -5,12 +5,17 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "CommandHandlerAccessor",
+    //#if MC==10809
     "EntityFXAccessor",
+    //#endif
     "GuiChatAccessor",
     "GuiNewChatAccessor",
     "GuiPlayerTabOverlayAccessor",
     "GuiScreenBookAccessor",
     "NBTTagCompoundAccessor",
+    //#if MC>=11202
+    //$$ "ParticleAccessor",
+    //#endif
     "SoundHandlerAccessor"
   ]
 }

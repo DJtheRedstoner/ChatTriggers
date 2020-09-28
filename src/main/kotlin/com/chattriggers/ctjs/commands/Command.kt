@@ -1,52 +1,65 @@
 package com.chattriggers.ctjs.commands
 
 import com.chattriggers.ctjs.triggers.OnTrigger
+import com.chattriggers.ctjs.utils.kotlin.MCBlockPos
 import net.minecraft.command.CommandBase
 import net.minecraft.command.CommandException
 import net.minecraft.command.ICommandSender
-import net.minecraft.util.BlockPos
+
+//#if MC>=11202
+//$$ import net.minecraft.server.MinecraftServer
+//#endif
 
 class Command(
     trigger: OnTrigger,
-    private val name: String,
+    val commandString: String,
     private val usage: String,
     private val tabCompletionOptions: MutableList<String>
 ) : CommandBase() {
-    private var triggers = mutableListOf<OnTrigger>()
+    val triggers = mutableListOf<OnTrigger>()
 
     init {
         this.triggers.add(trigger)
     }
 
-    fun getTriggers() = this.triggers
-
-    //#if MC<=10809
-    override fun getCommandName() = this.name
+    //#if MC>=11202
+    //$$ override fun getName() = commandString
     //#else
-    //$$ override fun getName() = this.name
+    override fun getCommandName() = commandString
     //#endif
 
     override fun getRequiredPermissionLevel() = 0
 
-    //#if MC<=10809
-    override fun getCommandUsage(sender: ICommandSender) = this.usage
+    //#if MC>=11202
+    //$$ override fun getUsage(sender: ICommandSender) = usage
     //#else
-    //$$ override fun getUsage(sender: ICommandSender) = this.usage
+    override fun getCommandUsage(sender: ICommandSender) = usage
     //#endif
 
+    //#if MC>=11202
+    //$$ override fun getTabCompletions(
+    //$$     server: MinecraftServer?,
+    //$$     sender: ICommandSender?,
+    //$$     args: Array<String?>?,
+    //$$     targetPos: MCBlockPos?
+    //$$ ): List<String?>? {
+    //$$     return emptyList<String>()
+    //$$ }
+    //#else
     override fun addTabCompletionOptions(
         sender: ICommandSender?,
         args: Array<out String>?,
-        pos: BlockPos?
+        pos: MCBlockPos?
     ): MutableList<String> {
-        return this.tabCompletionOptions
+        return tabCompletionOptions
     }
+    //#endif
 
     @Throws(CommandException::class)
-    //#if MC<=10809
-    override fun processCommand(sender: ICommandSender, args: Array<String>) = trigger(args)
-    //#else
+    //#if MC>=11202
     //$$ override fun execute(server: net.minecraft.server.MinecraftServer?, sender: ICommandSender, args: Array<String>) = trigger(args)
+    //#else
+    override fun processCommand(sender: ICommandSender, args: Array<String>) = trigger(args)
     //#endif
 
     private fun trigger(args: Array<String>) {

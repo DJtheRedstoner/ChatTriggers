@@ -9,6 +9,7 @@ import com.chattriggers.ctjs.minecraft.objects.message.TextComponent
 import com.chattriggers.ctjs.minecraft.wrappers.World
 import com.chattriggers.ctjs.print
 import com.chattriggers.ctjs.utils.config.Config
+import com.chattriggers.ctjs.utils.kotlin.MCClickEventAction
 import com.chattriggers.ctjs.utils.kotlin.fromJson
 import com.chattriggers.ctjs.utils.kotlin.toVersion
 import com.google.gson.Gson

@@ -1,11 +1,12 @@
 package com.chattriggers.ctjs.minecraft.wrappers.objects
 
-import com.chattriggers.ctjs.mixin.EntityFXAccessor
 import com.chattriggers.ctjs.utils.kotlin.External
 import com.chattriggers.ctjs.utils.kotlin.MCParticle
 
-//#if MC>10809
-//$$import com.chattriggers.ctjs.minecraft.mixins.MixinParticle
+//#if MC>=11202
+//$$ import com.chattriggers.ctjs.mixin.ParticleAccessor
+//#elseif MC==10809
+import com.chattriggers.ctjs.mixin.EntityFXAccessor
 //#endif
 
 @External
@@ -17,11 +18,11 @@ class Particle(val underlyingEntity: MCParticle) {
 
     fun getZ() = underlyingEntity.posZ
     //#else
-    //$$fun getX() = (underlyingEntity as MixinParticle).posX
+    //$$fun getX() = (underlyingEntity as ParticleAccessor).getPosX()
     //$$
-    //$$fun getY() = (underlyingEntity as MixinParticle).posY
+    //$$fun getY() = (underlyingEntity as ParticleAccessor).getPosY()
     //$$
-    //$$fun getZ() = (underlyingEntity as MixinParticle).posZ
+    //$$fun getZ() = (underlyingEntity as ParticleAccessor).getPosZ()
     //#endif
 
     fun setX(x: Double) = apply {
@@ -72,7 +73,11 @@ class Particle(val underlyingEntity: MCParticle) {
      * @param maxAge the particles max age (in ticks)
      */
     fun setMaxAge(maxAge: Int) = apply {
+        //#if MC>=11202
+        //$$ underlyingEntity.setMaxAge(maxAge)
+        //#else
         (underlyingEntity as EntityFXAccessor).setMaxAge(maxAge)
+        //#endif
     }
 
     fun remove() = apply {

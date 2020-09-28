@@ -5,8 +5,6 @@ import net.minecraft.crash.CrashReportCategory
 
 object AsmUtils {
     fun addCrashSectionCallable(crashReport: CrashReportCategory) {
-        crashReport.addCrashSectionCallable("ct.js modules") {
-            ModuleManager.cachedModules.toString()
-        }
+        crashReport.addCrashSection("ct.js modules", ModuleManager.cachedModules.toString())
     }
 }

@@ -45,12 +45,12 @@ class Item {
     }
 
     constructor(itemName: String) {
-        item = MCItem.getByNameOrId(itemName)
+        item = MCItem.getByNameOrId(itemName) ?: throw IllegalArgumentException("Invalid item name: $itemName")
         itemStack = ItemStack(item)
     }
 
     constructor(itemID: Int) {
-        item = MCItem.getItemById(itemID)
+        item = MCItem.getItemById(itemID) ?: throw IllegalArgumentException("Invalid item id: $itemID")
         itemStack = ItemStack(item)
     }
 
@@ -90,7 +90,11 @@ class Item {
     }
     /* End of constructors */
 
+    //#if MC>=11202
+    //$$ fun getTextComponent() = TextComponent(itemStack.textComponent)
+    //#else
     fun getTextComponent() = TextComponent(itemStack.chatComponent)
+    //#endif
 
     fun getRawNBT() = itemStack.serializeNBT().toString()
 
@@ -168,9 +172,8 @@ class Item {
         //#if MC<=10809
         return this.itemStack.canHarvestBlock(block.block)
         //#else
-        //$$ return this.itemStack.canHarvestBlock(
-        //$$         World.getWorld().getBlockState(block.blockPos)
-        //$$ )
+        //$$ return World.getWorld()?.getBlockState(block.blockPos)
+        //$$     ?.let(itemStack::canHarvestBlock) ?: false
         //#endif
     }
 

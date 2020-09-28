@@ -3,7 +3,7 @@ package com.chattriggers.ctjs.minecraft.wrappers.objects.inventory.action
 import com.chattriggers.ctjs.minecraft.wrappers.Player
 import com.chattriggers.ctjs.utils.kotlin.External
 
-//#if MC>10809
+//#if MC>=11202
 //$$ import com.chattriggers.ctjs.utils.kotlin.MCClickType
 //#endif
 

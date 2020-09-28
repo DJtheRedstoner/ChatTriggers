@@ -154,7 +154,7 @@ abstract class Gui : GuiScreen() {
      */
     override fun mouseClicked(mouseX: Int, mouseY: Int, button: Int) {
         super.mouseClicked(mouseX, mouseY, button)
-        this.onClick?.trigger(arrayOf(mouseX, mouseY, button))
+        onClick?.trigger(arrayOf(mouseX, mouseY, button))
     }
 
     /**
@@ -162,7 +162,7 @@ abstract class Gui : GuiScreen() {
      */
     override fun mouseReleased(mouseX: Int, mouseY: Int, button: Int) {
         super.mouseReleased(mouseX, mouseY, button)
-        this.onMouseReleased?.trigger(arrayOf(mouseX, mouseY, button))
+        onMouseReleased?.trigger(arrayOf(mouseX, mouseY, button))
     }
 
     /**
@@ -170,7 +170,7 @@ abstract class Gui : GuiScreen() {
      */
     override fun actionPerformed(button: GuiButton) {
         super.actionPerformed(button)
-        this.onActionPerformed?.trigger(arrayOf(button.id))
+        onActionPerformed?.trigger(arrayOf(button.id))
     }
 
     /**
@@ -178,7 +178,7 @@ abstract class Gui : GuiScreen() {
      */
     override fun mouseClickMove(mouseX: Int, mouseY: Int, clickedMouseButton: Int, timeSinceLastClick: Long) {
         super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick)
-        this.onMouseDragged?.trigger(arrayOf(mouseX, mouseY, clickedMouseButton, timeSinceLastClick))
+        onMouseDragged?.trigger(arrayOf(mouseX, mouseY, clickedMouseButton, timeSinceLastClick))
     }
 
     /**
@@ -190,8 +190,8 @@ abstract class Gui : GuiScreen() {
         val i = Mouse.getEventDWheel()
 
         when {
-            i > 0 -> this.onScroll?.trigger(arrayOf(this.mouseX, this.mouseY, 1))
-            i < 0 -> this.onScroll?.trigger(arrayOf(this.mouseX, this.mouseY, -1))
+            i > 0 -> onScroll?.trigger(arrayOf(mouseX, mouseY, 1))
+            i < 0 -> onScroll?.trigger(arrayOf(mouseX, mouseY, -1))
         }
     }
 
@@ -206,7 +206,7 @@ abstract class Gui : GuiScreen() {
         this.mouseX = mouseX
         this.mouseY = mouseY
 
-        this.onDraw?.trigger(arrayOf(mouseX, mouseY, partialTicks))
+        onDraw?.trigger(arrayOf(mouseX, mouseY, partialTicks))
 
         GlStateManager.popMatrix()
     }
@@ -217,15 +217,17 @@ abstract class Gui : GuiScreen() {
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         super.keyTyped(typedChar, keyCode)
 
-        this.onKeyTyped?.trigger(arrayOf(typedChar, keyCode))
+        onKeyTyped?.trigger(arrayOf(typedChar, keyCode))
     }
 
     /**
      * Internal method to run trigger. Not meant for public use
      */
-    override fun doesGuiPauseGame() = this.doesPauseGame
+    override fun doesGuiPauseGame() = doesPauseGame
 
-    fun setDoesPauseGame(doesPauseGame: Boolean) = apply { this.doesPauseGame = doesPauseGame }
+    fun setDoesPauseGame(doesPauseGame: Boolean) = apply {
+        this.doesPauseGame = doesPauseGame
+    }
 
     /**
      * Add a base Minecraft button to the gui
@@ -236,7 +238,7 @@ abstract class Gui : GuiScreen() {
      * @param buttonText the label of the button
      */
     fun addButton(buttonId: Int, x: Int, y: Int, buttonText: String) {
-        this.buttonList.add(GuiButton(buttonId, x, y, buttonText))
+        buttonList.add(GuiButton(buttonId, x, y, buttonText))
     }
 
     /**
@@ -250,11 +252,11 @@ abstract class Gui : GuiScreen() {
      * @param buttonText the label of the button
      */
     fun addButton(buttonId: Int, x: Int, y: Int, width: Int = 200, height: Int = 20, buttonText: String) {
-        this.buttonList.add(GuiButton(buttonId, x, y, width, height, buttonText))
+        buttonList.add(GuiButton(buttonId, x, y, width, height, buttonText))
     }
 
     fun setButtonVisibility(buttonId: Int, visible: Boolean) {
-        this.buttonList.firstOrNull {
+        buttonList.firstOrNull {
             it.id == buttonId
         }?.visible = visible
     }
@@ -268,7 +270,11 @@ abstract class Gui : GuiScreen() {
      * @param color color of the text
      */
     fun drawString(text: String, x: Int, y: Int, color: Int) {
-        this.drawString(this.mc.fontRendererObj, text, x, y, color)
+        //#if MC>=11202
+        //$$ drawString(mc.fontRenderer, text, x, y, color)
+        //#else
+        drawString(mc.fontRendererObj, text, x, y, color)
+        //#endif
     }
 
     /**
@@ -279,7 +285,7 @@ abstract class Gui : GuiScreen() {
      * @param mouseY Y position of mouse
      */
     fun drawCreativeTabHoveringString(text: String, mouseX: Int, mouseY: Int) {
-        this.drawCreativeTabHoveringText(text, mouseX, mouseY)
+        drawHoveringText(listOf(text), mouseX, mouseY)
     }
 
     /**
@@ -290,7 +296,11 @@ abstract class Gui : GuiScreen() {
      * @param y Y position of the text
      */
     fun drawHoveringString(text: List<String>, x: Int, y: Int) {
-        this.drawHoveringText(text, x, y, this.mc.fontRendererObj)
+        //#if MC>=11202
+        //$$ drawHoveringText(text, x, y, mc.fontRenderer)
+        //#else
+        drawHoveringText(text, x, y, mc.fontRendererObj)
+        //#endif
     }
 
     internal abstract fun getLoader(): ILoader

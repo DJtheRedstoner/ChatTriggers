@@ -37,9 +37,9 @@ object Client {
     fun getConnection(): NetHandlerPlayClient =
         //#if MC<=10809
         getMinecraft().netHandler
-    //#else
-    //$$ getMinecraft().connection
-    //#endif
+        //#else
+        //$$ getMinecraft().connection!!
+        //#endif
 
     /**
      * Quits the client back to the main menu.

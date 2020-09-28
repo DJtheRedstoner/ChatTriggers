@@ -20,7 +20,12 @@ class ParticleEffect @JvmOverloads constructor(
     @JvmOverloads
     fun setColor(r: Float, g: Float, b: Float, a: Float? = null) = apply {
         super.setRBGColorF(r, g, b)
-        if (a != null) alpha = a
+        if (a != null)
+            //#if MC>=11202
+            //$$ particleAlpha = a
+            //#else
+            alpha = a
+            //#endif
     }
 
     fun setColor(color: Int) = apply {

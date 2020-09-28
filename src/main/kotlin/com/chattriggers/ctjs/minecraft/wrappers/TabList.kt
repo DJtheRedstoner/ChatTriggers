@@ -3,8 +3,8 @@ package com.chattriggers.ctjs.minecraft.wrappers
 import com.chattriggers.ctjs.minecraft.objects.message.Message
 import com.chattriggers.ctjs.mixin.GuiPlayerTabOverlayAccessor
 import com.chattriggers.ctjs.utils.kotlin.External
-import com.chattriggers.ctjs.utils.kotlin.GameType
-import com.chattriggers.ctjs.utils.kotlin.ITextComponent
+import com.chattriggers.ctjs.utils.kotlin.MCGameType
+import com.chattriggers.ctjs.utils.kotlin.MCITextComponent
 import com.google.common.collect.ComparisonChain
 import com.google.common.collect.Ordering
 import net.minecraft.client.network.NetworkPlayerInfo
@@ -40,7 +40,11 @@ object TabList {
     fun getNames(): List<String> {
         if (Client.getTabGui() == null) return listOf()
 
-        val playerList = playerComparator.sortedCopy(Client.getMinecraft().thePlayer.sendQueue.playerInfoMap)
+        //#if MC>=11202
+        //$$ val playerList = playerComparator.sortedCopy(Player.getPlayer()!!.connection.playerInfoMap)
+        //#else
+        val playerList = playerComparator.sortedCopy(Player.getPlayer()!!.sendQueue.playerInfoMap)
+        //#endif
 
         return playerList.map {
             Client.getTabGui()!!.getPlayerName(it)
@@ -66,7 +70,7 @@ object TabList {
     }
 
     @JvmStatic
-    fun getHeaderMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getHeader()?.let(::Message)
+    fun getHeaderMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getHeader()?.let { Message(it) }
 
     @JvmStatic
     fun getHeader() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getHeader()?.formattedText
@@ -76,12 +80,12 @@ object TabList {
         when (header) {
             is String -> Client.getTabGui()?.setHeader(Message(header).getChatMessage())
             is Message -> Client.getTabGui()?.setHeader(header.getChatMessage())
-            is ITextComponent -> Client.getTabGui()?.setHeader(header)
+            is MCITextComponent -> Client.getTabGui()?.setHeader(header)
         }
     }
 
     @JvmStatic
-    fun getFooterMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getFooter()?.let(::Message)
+    fun getFooterMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getFooter()?.let { Message(it) }
 
     @JvmStatic
     fun getFooter() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getFooter()?.formattedText
@@ -91,7 +95,7 @@ object TabList {
         when (footer) {
             is String -> Client.getTabGui()?.setHeader(Message(footer).getChatMessage())
             is Message -> Client.getTabGui()?.setHeader(footer.getChatMessage())
-            is ITextComponent -> Client.getTabGui()?.setHeader(footer)
+            is MCITextComponent -> Client.getTabGui()?.setHeader(footer)
         }
     }
 
@@ -103,8 +107,8 @@ object TabList {
             return ComparisonChain
                 .start()
                 .compareTrueFirst(
-                    playerOne.gameType != GameType.SPECTATOR,
-                    playerTwo.gameType != GameType.SPECTATOR
+                    playerOne.gameType != MCGameType.SPECTATOR,
+                    playerTwo.gameType != MCGameType.SPECTATOR
                 ).compare(
                     //#if MC<=10809
                     teamOne?.registeredName ?: "",

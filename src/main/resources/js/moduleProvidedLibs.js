@@ -39,11 +39,14 @@ global.DisplayHandler = Java.type("com.chattriggers.ctjs.minecraft.objects.displ
 global.Gui = Java.type("com.chattriggers.ctjs.engine.langs.js.JSGui");
 global.Message = Java.type("com.chattriggers.ctjs.minecraft.objects.message.Message");
 global.TextComponent = Java.type("com.chattriggers.ctjs.minecraft.objects.message.TextComponent");
+global.ClickEventAction = Java.type("")
 global.Book = Java.type("com.chattriggers.ctjs.minecraft.objects.Book");
 global.KeyBind = Java.type("com.chattriggers.ctjs.minecraft.objects.KeyBind");
 global.Image = Java.type("com.chattriggers.ctjs.minecraft.libs.renderer.Image");
 global.Sound = Java.type("com.chattriggers.ctjs.minecraft.objects.Sound");
 global.PlayerMP = Java.type("com.chattriggers.ctjs.minecraft.wrappers.objects.PlayerMP");
+
+// TODO: ClickEventAction imports depending on MC version
 
 // Wrappers
 global.Client = Java.type("com.chattriggers.ctjs.minecraft.wrappers.Client");

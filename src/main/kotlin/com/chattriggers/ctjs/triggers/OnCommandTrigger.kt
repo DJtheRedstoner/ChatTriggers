@@ -58,7 +58,7 @@ class OnCommandTrigger(method: Any, loader: ILoader) : OnTrigger(method, Trigger
                 //#else
                 //$$ if (command.name == this.commandName) {
                 //#endif
-                command.getTriggers().add(this)
+                command.triggers.add(this)
                 return
             }
         }
