@@ -30,7 +30,7 @@ object EventLib {
     }
 
     @JvmStatic
-    fun getMessage(event: ClientChatReceivedEvent): ITextComponent {
+    fun getMessage(event: ClientChatReceivedEvent): MCITextComponent {
         return event.message
     }
 

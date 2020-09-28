@@ -156,9 +156,8 @@ object CTCommand : CommandBase() {
             msg = ChatLib.replaceFormatting(messages[messages.size - toDump + i])
             Message(
                 TextComponent(msg)
-                    .setClick("run_command", "/ct copy $msg")
-                    .setHoverValue(ChatLib.addColor("&eClick here to copy this message."))
-                    .setFormatted(false)
+                    .withClick(MCClickEventAction.RUN_COMMAND, "/ct copy $msg")
+                    .withHoverValue(ChatLib.addColor("&eClick here to copy this message."))
             ).setFormatted(false).setChatLineId(this.idFixed + i + 1).chat()
         }
         Message("&6&m${ChatLib.getChatBreak()}").setChatLineId(this.idFixed + lines + 1).chat()

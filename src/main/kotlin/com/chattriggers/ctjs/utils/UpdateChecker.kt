@@ -65,9 +65,9 @@ object UpdateChecker {
             "\n",
             "&cChatTriggers requires an update to work properly!",
             "\n",
-            TextComponent("&a[Download]").setClick("open_url", "https://www.chattriggers.com/#download"),
+            TextComponent("&a[Download]").withClick(MCClickEventAction.OPEN_URL, "https://www.chattriggers.com/#download"),
             " ",
-            TextComponent("&e[Changelog]").setClick("open_url", "https://github.com/ChatTriggers/ct.js/releases"),
+            TextComponent("&e[Changelog]").withClick(MCClickEventAction.OPEN_URL, "https://github.com/ChatTriggers/ct.js/releases"),
             "\n",
             "&c&m" + ChatLib.getChatBreak("-")
         ).chat()
