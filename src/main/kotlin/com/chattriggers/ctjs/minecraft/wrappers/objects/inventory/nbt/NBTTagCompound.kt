@@ -1,5 +1,6 @@
 package com.chattriggers.ctjs.minecraft.wrappers.objects.inventory.nbt
 
+import com.chattriggers.ctjs.mixin.NBTTagCompoundAccessor
 import com.chattriggers.ctjs.utils.kotlin.MCNBTBase
 import com.chattriggers.ctjs.utils.kotlin.MCNBTTagCompound
 import net.minecraft.nbt.NBTTagByteArray
@@ -8,7 +9,7 @@ import java.lang.IllegalArgumentException
 
 class NBTTagCompound(override val rawNBT: MCNBTTagCompound) : NBTBase(rawNBT) {
     val tagMap: Map<String, MCNBTBase>
-        get() = rawNBT.tagMap
+        get() = (rawNBT as NBTTagCompoundAccessor).getTagMap()
 
     val keySet: Set<String>
         get() = rawNBT.keySet

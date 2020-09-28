@@ -1,6 +1,7 @@
 package com.chattriggers.ctjs.minecraft.wrappers
 
 import com.chattriggers.ctjs.minecraft.objects.message.Message
+import com.chattriggers.ctjs.mixin.GuiPlayerTabOverlayAccessor
 import com.chattriggers.ctjs.utils.kotlin.External
 import com.chattriggers.ctjs.utils.kotlin.GameType
 import com.chattriggers.ctjs.utils.kotlin.ITextComponent
@@ -65,10 +66,10 @@ object TabList {
     }
 
     @JvmStatic
-    fun getHeaderMessage() = Client.getTabGui()?.header?.let(::Message)
+    fun getHeaderMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getHeader()?.let(::Message)
 
     @JvmStatic
-    fun getHeader() = Client.getTabGui()?.header?.formattedText
+    fun getHeader() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getHeader()?.formattedText
 
     @JvmStatic
     fun setHeader(header: Any) {
@@ -80,10 +81,10 @@ object TabList {
     }
 
     @JvmStatic
-    fun getFooterMessage() = Client.getTabGui()?.footer?.let(::Message)
+    fun getFooterMessage() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getFooter()?.let(::Message)
 
     @JvmStatic
-    fun getFooter() = Client.getTabGui()?.footer?.formattedText
+    fun getFooter() = (Client.getTabGui() as? GuiPlayerTabOverlayAccessor)?.getFooter()?.formattedText
 
     @JvmStatic
     fun setFooter(footer: Any) {

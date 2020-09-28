@@ -4,6 +4,7 @@ import com.chattriggers.ctjs.CTJS
 import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.minecraft.wrappers.Player
 import com.chattriggers.ctjs.minecraft.wrappers.World
+import com.chattriggers.ctjs.mixin.SoundHandlerAccessor
 import com.chattriggers.ctjs.utils.kotlin.External
 import com.chattriggers.ctjs.utils.kotlin.SoundCategory
 import net.minecraft.client.audio.SoundManager
@@ -79,7 +80,7 @@ class Sound(private val config: NativeObject) {
     }
 
     private fun loadSndSystem() {
-        val sndManager = Client.getMinecraft().soundHandler.sndManager
+        val sndManager = (Client.getMinecraft().soundHandler as SoundHandlerAccessor).getSoundManager()
 
         sndSystem = ReflectionHelper.getPrivateValue<SoundSystem, SoundManager>(
             SoundManager::class.java,

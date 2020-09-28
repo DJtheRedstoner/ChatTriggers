@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "com.chattriggers.ctjs.mixin",
+  "refmap": "mixins.ctjs.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "CommandHandlerAccessor",
+    "EntityFXAccessor",
+    "GuiChatAccessor",
+    "GuiNewChatAccessor",
+    "GuiPlayerTabOverlayAccessor",
+    "GuiScreenBookAccessor",
+    "NBTTagCompoundAccessor",
+    "SoundHandlerAccessor"
+  ]
+}

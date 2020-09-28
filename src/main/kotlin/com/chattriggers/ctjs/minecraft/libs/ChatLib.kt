@@ -6,6 +6,7 @@ import com.chattriggers.ctjs.minecraft.objects.message.Message
 import com.chattriggers.ctjs.minecraft.objects.message.TextComponent
 import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.minecraft.wrappers.Player
+import com.chattriggers.ctjs.mixin.GuiNewChatAccessor
 import com.chattriggers.ctjs.print
 import com.chattriggers.ctjs.utils.kotlin.External
 import com.chattriggers.ctjs.utils.kotlin.times
@@ -281,8 +282,8 @@ object ChatLib {
      */
     @JvmStatic
     private fun editChat(toReplace: (Message) -> Boolean, vararg replacements: Message) {
-        val drawnChatLines = Client.getChatGUI()!!.drawnChatLines
-        val chatLines = Client.getChatGUI()!!.chatLines
+        val drawnChatLines = (Client.getChatGUI()!! as GuiNewChatAccessor).getDrawnChatLines().toMutableList()
+        val chatLines = (Client.getChatGUI()!! as GuiNewChatAccessor).getChatLines().toMutableList()
 
         editChatLineList(chatLines, toReplace, *replacements)
         editChatLineList(drawnChatLines, toReplace, *replacements)

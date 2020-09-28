@@ -6,6 +6,7 @@ import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.minecraft.wrappers.Player
 import com.chattriggers.ctjs.minecraft.wrappers.objects.inventory.nbt.NBTTagCompound
 import com.chattriggers.ctjs.minecraft.wrappers.objects.inventory.nbt.NBTTagList
+import com.chattriggers.ctjs.mixin.GuiScreenBookAccessor
 import com.chattriggers.ctjs.utils.kotlin.*
 import com.chattriggers.ctjs.utils.kotlin.MCNBTTagCompound
 import com.chattriggers.ctjs.utils.kotlin.MCNBTTagString
@@ -86,7 +87,7 @@ class Book(bookName: String) {
         bookData.removeTag("pages")
         bookData["pages"] = pages
         book.tagCompound = bookData.rawNBT
-        bookScreen?.bookPages = pages.rawNBT
+        (bookScreen as? GuiScreenBookAccessor)?.setBookPages(pages.rawNBT)
     }
 
     @JvmOverloads
@@ -95,7 +96,7 @@ class Book(bookName: String) {
             bookScreen = GuiScreenBook(Player.getPlayer(), book, false)
         }
 
-        bookScreen!!.currPage = page
+        (bookScreen as GuiScreenBookAccessor).setCurrentPage(page)
         GuiHandler.openGui(bookScreen ?: return)
     }
 
@@ -104,6 +105,8 @@ class Book(bookName: String) {
     }
 
     fun getCurrentPage(): Int {
-        return if (!isOpen() || bookScreen == null) -1 else bookScreen!!.currPage
+        return if (!isOpen() || bookScreen == null) {
+            -1
+        } else (bookScreen as GuiScreenBookAccessor).getCurrentPage()
     }
 }

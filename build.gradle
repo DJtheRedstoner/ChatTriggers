@@ -25,8 +25,8 @@ buildscript {
             }
         }
         maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            name = "SpongePowered Repo"
+            url = "http://repo.spongepowered.org/maven/"
         }
         maven { url 'https://jitpack.io' }
     }
@@ -37,10 +37,12 @@ buildscript {
         if (fabric) {
             classpath 'fabric-loom:fabric-loom.gradle.plugin:0.4-SNAPSHOT'
         } else if (mcVersion >= 11400) {
-            classpath('net.minecraftforge.gradle:ForgeGradle:3.+'){
+            classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+            classpath('net.minecraftforge.gradle:ForgeGradle:3.+') {
                 exclude group: 'trove', module: 'trove' // preprocessor/idea requires more recent one
             }
         } else {
+            classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
             classpath('com.github.ReplayMod:ForgeGradle:' + (
                     mcVersion >= 11200 ? 'b64de9c' : // FG 2.3
                             mcVersion >= 10904 ? '5bb7a53' : // FG 2.2
@@ -63,6 +65,10 @@ repositories {
     maven {
         name = "kryonet"
         url = "http://clojars.org/repo/"
+    }
+    maven {
+        name = "SpongePowered Repo"
+        url = "http://repo.spongepowered.org/maven/"
     }
     maven {
         url 'https://repository.apache.org/content/repositories/releases/org/apache/xmlgraphics/'
@@ -116,14 +122,24 @@ if (mcVersion >= 11400) {
 
 if (FABRIC) {
     minecraft {
+        refmapName = 'mixins.ctjs.refmap.json'
         autoGenIDERuns = true
     }
 } else {
-    minecraft {
-        if (mcVersion >= 11502) {
-            accessTransformer = file('src/main/resources/META-INF/ctjs_at.cfg')
-        }
+    ext {
+        mixinSrg = new File(project.buildDir, 'tmp/mixins/mixins.srg')
+        mixinRefMap = new File(project.buildDir, 'tmp/mixins/mixins.ctjs.json')
+    }
 
+    compileJava {
+        options.compilerArgs += [
+                "-AoutSrgFile=${project.mixinSrg.canonicalPath}",
+                "-AoutRefMapFile=${project.mixinRefMap.canonicalPath}",
+                "-AreobfSrgFile=${project.file('build/mcp-srg.srg').canonicalPath}"
+        ]
+    }
+
+    minecraft {
         if (FG3) {
             runs {
                 client {
@@ -175,7 +191,23 @@ if (FABRIC) {
     }
 }
 
+if (!FABRIC && !FG3) {
+    if (mcVersion <= 10710) {
+        reobf.addExtraSrgFile project.mixinSrg
+    } else {
+        reobfJar.addSecondarySrgFile project.mixinSrg
+    }
+}
+
 dependencies {
+    provided ('org.spongepowered:mixin:0.7.5-SNAPSHOT') {
+        exclude module: 'launchwrapper'
+        exclude module: 'guava'
+        exclude module: 'gson'
+        exclude module: 'commons-io'
+        exclude module: 'log4j-core'
+    }
+
     provided "com.fasterxml.jackson.core:jackson-core:2.9.3"
     provided "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     provided "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
@@ -231,6 +263,21 @@ dependencies {
                 11602: '1.16.2-33.0.58'
         ][mcVersion]
     }
+
+    if (!FABRIC) {
+        // Mixin 0.8 is no longer compatible with MC 1.11.2 or older
+        def mixinVersion = mcVersion >= 11200 ? '0.8' : '0.7.10-SNAPSHOT'
+        annotationProcessor "org.spongepowered:mixin:$mixinVersion"
+        compileOnly "org.spongepowered:mixin:$mixinVersion"
+        provided ("org.spongepowered:mixin:$mixinVersion") {
+            transitive = false // deps should all be bundled with MC
+        }
+
+        // Mixin needs these (and depends on them but for some reason that's not enough. FG, did you do that?)
+        annotationProcessor 'com.google.code.gson:gson:2.2.4'
+        annotationProcessor 'com.google.guava:guava:21.0'
+        annotationProcessor 'org.ow2.asm:asm-tree:6.2'
+    }
 }
 
 processResources {
@@ -243,9 +290,6 @@ processResources {
         exclude "mods.toml"
         exclude "META-INF/mods.toml"
     }
-
-    if (mcVersion <= 11202)
-        rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 tasks.removeByName('shadowJar') // we want to base our shadowed jar on the reobfJar output, not the sourceSet output
@@ -279,9 +323,14 @@ artifacts {
 }
 
 jar {
-    manifest.attributes(
-        "FMLCorePlugin": "com.chattriggers.ctjs.launch.plugin.CTJSLoadingPlugin",
-        "FMLCorePluginContainsFMLMod": "true",
-        "FMLAT": "ctjs_at.cfg"
-    )
+    if (!FABRIC) {
+        from files(project.mixinRefMap.canonicalPath)
+
+        manifest.attributes(
+                "TweakClass": "com.chattriggers.ctjs.launch.tweaker.CTJSTweaker",
+                "TweakOrder": "0",
+                "FMLCorePluginContainsFMLMod": "true",
+                "FMLCorePlugin": "com.chattriggers.ctjs.launch.plugin.CTJSLoadingPlugin"
+        )
+    }
 }

@@ -10,6 +10,7 @@ import com.chattriggers.ctjs.minecraft.objects.gui.GuiHandler
 import com.chattriggers.ctjs.minecraft.objects.message.Message
 import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.minecraft.wrappers.World
+import com.chattriggers.ctjs.mixin.CommandHandlerAccessor
 import com.chattriggers.ctjs.triggers.TriggerType
 import com.chattriggers.ctjs.utils.config.Config
 import com.chattriggers.ctjs.utils.kotlin.External
@@ -62,8 +63,10 @@ object Reference {
         unloadCT(false)
 
         ChatLib.chat("&cReloading ct.js scripts...")
-        ClientCommandHandler.instance.commandSet.removeIf { it is Command }
-        ClientCommandHandler.instance.commandMap.entries.removeIf { it.value is Command }
+        (ClientCommandHandler.instance as CommandHandlerAccessor).also { instance ->
+            instance.getCommandSet().removeIf { it is Command }
+            instance.getCommandMap().entries.removeIf { it.value is Command }
+        }
 
         CTJS.loadConfig()
 

@@ -3,6 +3,7 @@ package com.chattriggers.ctjs.minecraft.wrappers
 import com.chattriggers.ctjs.minecraft.libs.ChatLib
 import com.chattriggers.ctjs.minecraft.libs.renderer.Renderer
 import com.chattriggers.ctjs.minecraft.objects.KeyBind
+import com.chattriggers.ctjs.mixin.GuiChatAccessor
 import com.chattriggers.ctjs.utils.kotlin.External
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.*
@@ -188,7 +189,7 @@ object Client {
     fun getCurrentChatMessage(): String {
         return if (isInChat()) {
             val chatGui = getMinecraft().currentScreen as GuiChat
-            chatGui.inputField.text
+            (chatGui as GuiChatAccessor).getInputField().text
         } else ""
     }
 
@@ -201,7 +202,7 @@ object Client {
     fun setCurrentChatMessage(message: String) {
         if (isInChat()) {
             val chatGui = getMinecraft().currentScreen as GuiChat
-            chatGui.inputField.text = message
+            (chatGui as GuiChatAccessor).getInputField().text = message
         } else Client.getMinecraft().displayGuiScreen(GuiChat(message))
     }
 

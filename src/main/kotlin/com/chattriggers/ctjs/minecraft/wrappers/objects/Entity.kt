@@ -31,10 +31,10 @@ open class Entity(val entity: MCEntity) {
      * @return the entity's pitch
      */
     fun getPitch(): Double {
-        //#if MC<=10809
-        return MathHelper.wrapAngleTo180_float(this.entity.rotationPitch).toDouble()
+        //#if MC>=11202
+        //$$ return MathHelper.wrapDegrees(entity.rotationPitch).toDouble()
         //#else
-        //$$ return MathHelper.wrapDegrees(this.entity.rotationPitch).toDouble()
+        return MathHelper.wrapAngleTo180_float(entity.rotationPitch).toDouble()
         //#endif
     }
 
@@ -45,10 +45,10 @@ open class Entity(val entity: MCEntity) {
      * @return the entity's yaw
      */
     fun getYaw(): Double {
-        //#if MC<=10809
-        return MathHelper.wrapAngleTo180_float(this.entity.rotationYaw).toDouble()
+        //#if MC>=11202
+        //$$ return MathHelper.wrapDegrees(entity.rotationYaw).toDouble()
         //#else
-        //$$ return MathHelper.wrapDegrees(this.entity.rotationYaw).toDouble()
+        return MathHelper.wrapAngleTo180_float(entity.rotationYaw).toDouble()
         //#endif
     }
 
@@ -58,7 +58,7 @@ open class Entity(val entity: MCEntity) {
      *
      * @return the player's x motion
      */
-    fun getMotionX(): Double = this.entity.motionX
+    fun getMotionX(): Double = entity.motionX
 
     /**
      * Gets the entity's y motion.
@@ -66,7 +66,7 @@ open class Entity(val entity: MCEntity) {
      *
      * @return the player's y motion
      */
-    fun getMotionY(): Double = this.entity.motionY
+    fun getMotionY(): Double = entity.motionY
 
     /**
      * Gets the entity's z motion.
@@ -74,7 +74,7 @@ open class Entity(val entity: MCEntity) {
      *
      * @return the player's z motion
      */
-    fun getMotionZ(): Double = this.entity.motionZ
+    fun getMotionZ(): Double = entity.motionZ
 
     /**
      * Gets the entity's health, -1 if not a living entity
@@ -82,41 +82,26 @@ open class Entity(val entity: MCEntity) {
      * @return the entity's health
      */
     fun getHP(): Float {
-        return if (this.entity is EntityLivingBase)
-            this.entity.health
-        else -1f
+        return if (entity is EntityLivingBase) entity.health else -1f
     }
 
     fun getRiding(): Entity? {
-        val riding = this.entity.ridingEntity
-
-        return if (riding == null)
-            null
-        else
-            Entity(riding)
+        return entity.ridingEntity?.let(::Entity)
     }
 
     fun getRider(): Entity? {
-        //#if MC<=10809
-        return if (this.entity.riddenByEntity == null)
-            null
-        else
-            Entity(this.entity.riddenByEntity)
+        //#if MC>=11202
+        //$$ return if (getRiders().isEmpty()) null else getRiders().get(0)
         //#else
-        //$$ return if (getRiders().isEmpty())
-        //$$     null
-        //$$ else
-        //$$     getRiders().get(0)
+        return entity.riddenByEntity?.let(::Entity)
         //#endif
     }
 
     fun getRiders(): List<Entity> {
-        //#if MC<=10809
-        return listOf()
+        //#if MC>=11202
+        //$$ return entity.getPassengers().map(::Entity)
         //#elseif
-        //$$ return this.entity.getPassengers().map {
-        //$$     Entity(it)
-        //$$ }
+        return listOf()
         //#endif
     }
 
@@ -176,11 +161,6 @@ open class Entity(val entity: MCEntity) {
     fun getUUID(): UUID = this.entity.uniqueID
 
     override fun toString(): String {
-        return ("Entity{"
-                + getName()
-                + ",x:" + getX()
-                + ",y:" + getY()
-                + ",z:" + getZ()
-                + "}")
+        return "Entity{${getName()},x:${getX()},y:${getY()},z:${getZ()}}"
     }
 }
