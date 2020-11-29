@@ -8,7 +8,7 @@ import me.falsehonesty.asmhelper.dsl.instructions.*
 fun injectScreenshotHelper() = inject {
     className = "net/minecraft/util/ScreenShotHelper"
     methodName = "saveScreenshot"
-    methodDesc = "(L$FILE;IILnet/minecraft/client/shader/Framebuffer;)L$ICHAT_COMPONENT;"
+    methodDesc = "(L$FILE;IILnet/minecraft/client/shader/Framebuffer;)L$ITEXTCOMPONENT;"
     at = At(InjectionPoint.HEAD)
 
     methodMaps = mapOf(

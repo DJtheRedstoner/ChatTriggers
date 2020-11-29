@@ -18,7 +18,11 @@ fun injectMinecraft() = inject {
                 "getChatGUI",
                 "()Lnet/minecraft/client/gui/GuiNewChat;"
             ),
+            //#if MC==10809
             ordinal = 1
+            //#else
+            //$$ ordinal = 0
+            //#endif
         ),
         before = true,
         shift = -2
@@ -38,7 +42,7 @@ fun injectMinecraft() = inject {
     )
 
     insnList {
-        invokeStatic("net/minecraft/util/ScreenShotHelper", "saveScreenshot", "(L$FILE;IIL$FRAME_BUFFER;)L$ICHAT_COMPONENT;") {
+        invokeStatic("net/minecraft/util/ScreenShotHelper", "saveScreenshot", "(L$FILE;IIL$FRAME_BUFFER;)L$ITEXTCOMPONENT;") {
             getLocalField(className, "mcDataDir", "L$FILE;")
             getLocalField(className, "displayWidth", "I")
             getLocalField(className, "displayHeight", "I")
@@ -48,7 +52,7 @@ fun injectMinecraft() = inject {
         load(chatComponent)
 
         ifClause(JumpCondition.NULL) {
-            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ICHAT_COMPONENT;)V") {
+            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ITEXTCOMPONENT;)V") {
                 load(chatComponent)
             }
             invokeVirtual("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "chat", "()V")

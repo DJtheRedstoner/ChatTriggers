@@ -279,7 +279,7 @@ fun injectMouseDrag() = inject {
 fun injectTextComponentClick() = inject {
     className = "net/minecraft/client/gui/GuiScreen"
     methodName = "handleComponentClick"
-    methodDesc = "(L$ICHAT_COMPONENT;)Z"
+    methodDesc = "(L$ITEXTCOMPONENT;)Z"
     at = At(InjectionPoint.HEAD)
 
     methodMaps = mapOf("func_175276_a" to "handleComponentClick")
@@ -299,7 +299,7 @@ fun injectTextComponentClick() = inject {
                             aconst_null()
                         }
                         elseCode {
-                            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ICHAT_COMPONENT;)V") {
+                            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ITEXTCOMPONENT;)V") {
                                 aload(1)
                             }
                         }
@@ -323,7 +323,7 @@ fun injectTextComponentClick() = inject {
 fun injectTextComponentHover() = inject {
     className = "net/minecraft/client/gui/GuiScreen"
     methodName = "handleComponentHover"
-    methodDesc = "(L$ICHAT_COMPONENT;II)V"
+    methodDesc = "(L$ITEXTCOMPONENT;II)V"
     at = At(InjectionPoint.HEAD)
 
     methodMaps = mapOf("func_175272_a" to "handleComponentHover")
@@ -343,7 +343,7 @@ fun injectTextComponentHover() = inject {
                             aconst_null()
                         }
                         elseCode {
-                            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ICHAT_COMPONENT;)V") {
+                            createInstance("com/chattriggers/ctjs/minecraft/objects/message/TextComponent", "(L$ITEXTCOMPONENT;)V") {
                                 aload(1)
                             }
                         }
@@ -381,13 +381,21 @@ fun injectRenderTooltip() = inject {
     at = At(
         InjectionPoint.INVOKE(
             Descriptor(
+                //#if MC==10809
                 ITEM_STACK,
                 "getTooltip",
                 "(L$ENTITY_PLAYER;Z)Ljava/util/List;"
+                //#else
+                //$$ "net/minecraft/client/gui/GuiScreen",
+                //$$ "getItemToolTip",
+                //$$ "(L$ITEM_STACK;)Ljava/util/List;"
+                //#endif
             )
         ),
-        before = false,
-        shift = 1
+        before = false
+        //#if MC==10809
+        ,shift = 1
+        //#endif
     )
 
     methodMaps = mapOf(
@@ -396,6 +404,11 @@ fun injectRenderTooltip() = inject {
     )
 
     insnList {
+        //#if MC>10809
+        //$$ dup()
+        //$$ val list = astore()
+        //#endif
+
         createInstance(CANCELLABLE_EVENT, "()V")
         val event = astore()
 
@@ -403,7 +416,11 @@ fun injectRenderTooltip() = inject {
         invokeVirtual(TRIGGER_TYPE, "triggerAll", "([Ljava/lang/Object;)V") {
             array(3, "java/lang/Object") {
                 aadd {
+                    //#if MC==10809
                     aload(4)
+                    //#else
+                    //$$ load(list)
+                    //#endif
                 }
 
                 aadd {

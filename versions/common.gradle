@@ -1,0 +1,565 @@
+import com.replaymod.gradle.preprocess.PreprocessTask
+
+buildscript {
+    ext.kotlin_version = "1.3.72"
+    ext.dokka_version = "0.10.0"
+
+    def mcVersion
+    def (major, minor, patch) = project.name.tokenize('-')[0].tokenize('.')
+    mcVersion = "${major}${minor.padLeft(2, '0')}${(patch ?: '').padLeft(2, '0')}" as int
+    def fabric = mcVersion >= 11400 && project.name.endsWith("-fabric")
+    project.ext.mcVersion = mcVersion
+    project.ext.fabric = fabric
+
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven {
+            name = "fabric"
+            url = "https://maven.fabricmc.net/"
+        }
+        if (!fabric) {
+            maven {
+                name = "forge"
+                url = "https://files.minecraftforge.net/maven"
+            }
+        }
+        maven {
+            name = "SpongePowered Repo"
+            url = "http://repo.spongepowered.org/maven/"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven { url 'https://jitpack.io' }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:${dokka_version}"
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
+        if (fabric) {
+            classpath 'fabric-loom:fabric-loom.gradle.plugin:0.4-SNAPSHOT'
+        } else if (mcVersion >= 11400) {
+            classpath('net.minecraftforge.gradle:ForgeGradle:3.+'){
+                exclude group: 'trove', module: 'trove' // preprocessor/idea requires more recent one
+            }
+        } else if (mcVersion >= 10800) {
+            classpath('com.github.ReplayMod:ForgeGradle:' + (
+                    mcVersion >= 11200 ? 'b64de9c' : // FG 2.3
+                            mcVersion >= 10904 ? '5bb7a53' : // FG 2.2
+                                    'fc1eabc'   // FG 2.1
+            ) + ':all')
+        } else {
+            classpath 'com.github.ReplayMod:ForgeGradle:5fca6853:all' // FG 1.2
+        }
+    }
+}
+
+def FG3 = !fabric && mcVersion >= 11400
+def FABRIC = fabric
+mcVersion = project.ext.mcVersion
+
+if (FABRIC) {
+    apply plugin: 'fabric-loom'
+} else if (FG3) {
+    apply plugin: 'net.minecraftforge.gradle'
+} else {
+    apply plugin: 'net.minecraftforge.gradle.forge'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'kotlin'
+apply plugin: 'org.jetbrains.dokka'
+
+if (!FABRIC) {
+    ext {
+        mixinSrg = new File(project.buildDir, 'tmp/mixins/mixins.srg')
+        mixinRefMap = new File(project.buildDir, 'tmp/mixins/mixins.ctjs.refmap.json')
+    }
+
+    compileJava {
+        options.compilerArgs += [
+                "-AoutSrgFile=${project.mixinSrg.canonicalPath}",
+                "-AoutRefMapFile=${project.mixinRefMap.canonicalPath}",
+                "-AreobfSrgFile=${project.file('build/mcp-srg.srg').canonicalPath}"
+        ]
+    }
+}
+
+apply plugin: 'com.replaymod.preprocess'
+
+preprocess {
+    vars.put("MC", mcVersion)
+    vars.put("FABRIC", project.fabric ? 1 : 0)
+    vars.put("FORGE", project.fabric ? 0 : 1)
+
+    keywords.set([
+            ".java": PreprocessTask.DEFAULT_KEYWORDS,
+            ".kt": PreprocessTask.DEFAULT_KEYWORDS,
+            ".js": PreprocessTask.DEFAULT_KEYWORDS,
+            ".json": PreprocessTask.DEFAULT_KEYWORDS,
+            ".info": PreprocessTask.DEFAULT_KEYWORDS,
+    ])
+}
+
+def mcVersionStr = "${(int)(mcVersion/10000)}.${(int)(mcVersion/100)%100}" + (mcVersion%100==0 ? '' : ".${mcVersion%100}")
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+if (mcVersion >= 11400) {
+    sourceSets {
+        api
+    }
+}
+
+version = "1.3.0-" + mcVersionStr
+group = "com.chattriggers.ctjs" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "ctjs"
+
+compileJava.options.encoding = 'UTF-8'
+
+if (FABRIC) {
+    minecraft {
+        refmapName = 'mixins.ctjs.refmap.json'
+        autoGenIDERuns = true
+    }
+} else {
+    minecraft {
+        if (FG3) {
+            runs {
+                client {
+                    workingDirectory rootProject.file('run')
+                    property 'forge.logging.console.level', 'info'
+                    mods {
+                        ctjs {
+                            source sourceSets.main
+                        }
+                    }
+                }
+            }
+        } else {
+            coreMod = 'com.chattriggers.ctjs.launch.plugin.CTJSLoadingPlugin'
+            runDir = "../../run"
+        }
+
+        if (!FG3) {
+            version = [
+                    11202: '1.12.2-14.23.0.2486',
+                    11201: '1.12.1-14.22.0.2444',
+                    11200: '1.12-14.21.1.2387',
+                    11102: '1.11.2-13.20.0.2216',
+                    11100: '1.11-13.19.1.2188',
+                    11002: '1.10.2-12.18.2.2099',
+                    10904: '1.9.4-12.17.0.1976',
+                    10809: '1.8.9-11.15.1.1722',
+                    10800: '1.8-11.14.4.1563',
+                    10710: '1.7.10-10.13.4.1558-1.7.10',
+            ][mcVersion]
+        }
+        mappings = [
+                11404: "snapshot_20190719-1.14.3",
+                11202: "snapshot_20170615",
+                11201: "snapshot_20170615",
+                11200: "snapshot_20170615",
+                11102: "snapshot_20161220",
+                11100: "snapshot_20161111",
+                11002: "snapshot_20160518",
+                10904: "snapshot_20160518",
+                10809: "stable_22",
+                10800: "snapshot_nodoc_20141130",
+                10710: "stable_12",
+        ][mcVersion]
+
+//        if (!FG3) {
+//            version = [
+//                    11202: '1.12.2-14.23.0.2486',
+//                    11201: '1.12.1-14.22.0.2444',
+//                    11200: '1.12-14.21.1.2387',
+//                    11102: '1.11.2-13.20.0.2216',
+//                    11100: '1.11-13.19.1.2188',
+//                    11002: '1.10.2-12.18.2.2099',
+//                    10904: '1.9.4-12.17.0.1976',
+//                    10809: '1.8.9-11.15.1.1722',
+//                    10800: '1.8-11.14.4.1563',
+//                    10710: '1.7.10-10.13.4.1558-1.7.10',
+//            ][mcVersion]
+//            mappings = [
+//                    11404: "snapshot_20190719-1.14.3",
+//                    11202: "snapshot_20170615",
+//                    11201: "snapshot_20170615",
+//                    11200: "snapshot_20170615",
+//                    11102: "snapshot_20161220",
+//                    11100: "snapshot_20161111",
+//                    11002: "snapshot_20160518",
+//                    10904: "snapshot_20160518",
+//                    10809: "stable_22",
+//                    10800: "snapshot_nodoc_20141130",
+//                    10710: "stable_12",
+//            ][mcVersion]
+//        } else {
+//            mappings channel: 'snapshot', version: [
+//                    11502: '20200220-1.15.1',
+//                    11602: '20200723-1.16.1'
+//            ][mcVersion]
+//        }
+    }
+}
+
+afterEvaluate {
+    if (mcVersion >= 11400) {
+        // No longer required in 1.13+ because all version info is in the toml file
+    } else {
+        // Note cannot use minecraft.replace because that has already been forwarded to the task by FG by now
+        tasks.sourceMainJava.replace '@MOD_VERSION@', project.version
+        // Includes intentional whitespace to stop Forge from declaring the mod to be compatible with
+        // a newer srg-compatible MC version (that may be using a different protocol version)
+        tasks.sourceMainJava.replace '@MC_VERSION@', "[ $mcVersionStr ]"
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven {
+        name = "kryonet"
+        url = "http://clojars.org/repo/"
+    }
+    maven {
+        name = "fabric"
+        url = "https://maven.fabricmc.net/"
+    }
+    maven {
+        name = "SpongePowered Repo"
+        url = "http://repo.spongepowered.org/maven/"
+    }
+    maven {
+        url 'https://repository.apache.org/content/repositories/releases/org/apache/xmlgraphics/'
+    }
+    maven {
+        url 'https://jitpack.io'
+        content {
+            includeGroupByRegex 'com\\.github\\..*'
+        }
+    }
+    maven { url "https://repo.sk1er.club/repository/maven-public" }
+}
+
+//configurations {
+//    provided
+//    // Make compile extend from our provided configuration so that things added to bundled end up on the compile classpath
+//    compile.extendsFrom(provided)
+//}
+
+configurations {
+    // Include dep in fat jar without relocation and, when forge supports it, without exploding (TODO)
+    shade
+    compile.extendsFrom shade
+    // Include dep in fat jar with relocation and minimization
+    shadow
+    compile.extendsFrom shadow
+}
+
+//if (!FABRIC && !FG3) {
+//    if (mcVersion <= 10710) {
+//        reobf.addExtraSrgFile project.mixinSrg
+//    } else {
+//        reobfJar.addSecondarySrgFile project.mixinSrg
+//    }
+//}
+
+def shadeExclusions = {
+    // Cannot just add these to the shade configuration because they'd be inherited by the compile configuration then
+    exclude group: 'com.google.guava', module: 'guava-jdk5'
+    exclude group: 'com.google.guava', module: 'guava' // provided by MC
+    exclude group: 'com.google.code.gson', module: 'gson' // provided by MC
+}
+
+dependencies {
+    if (FABRIC) {
+        minecraft 'com.mojang:minecraft:' + [
+                11502: '1.15.2',
+                11601: '1.16.1',
+                11603: '1.16.3',
+        ][mcVersion]
+        mappings 'net.fabricmc:yarn:' + [
+                11502: '1.15.2+build.14',
+                11601: '1.16.1+build.17:v2',
+                11603: '1.16.3+build.1:v2',
+        ][mcVersion]
+        modCompile 'net.fabricmc:fabric-loader:' + [
+                11502: '0.7.8+build.189',
+                11601: '0.8.8+build.202',
+                11603: '0.9.1+build.205',
+        ][mcVersion]
+        def fabricApiVersion = [
+                11502: '0.5.1+build.294-1.15',
+                11601: '0.14.0+build.371-1.16',
+                11603: '0.17.1+build.394-1.16',
+        ][mcVersion]
+        def fabricApiModules = [
+                "api-base",
+                "networking-v0",
+                "keybindings-v0",
+                "resource-loader-v0",
+        ]
+        if (mcVersion >= 11600) {
+            fabricApiModules.add("key-binding-api-v1")
+        }
+        fabricApiModules.each { module ->
+            modCompile fabricApi.module("fabric-$module", fabricApiVersion)
+            include fabricApi.module("fabric-$module", fabricApiVersion)
+        }
+    }
+
+    if (FG3) {
+        minecraft 'net.minecraftforge:forge:' + [
+                11502: '1.15.2-31.1.18',
+                11602: '1.16.2-33.0.58'
+        ][mcVersion]
+    }
+
+    if (!FABRIC) {
+        // Mixin 0.8 is no longer compatible with MC 1.11.2 or older
+        def mixinVersion = mcVersion >= 11200 ? '0.8' : '0.7.10-SNAPSHOT'
+        annotationProcessor "org.spongepowered:mixin:$mixinVersion"
+        compileOnly "org.spongepowered:mixin:$mixinVersion"
+        shade("org.spongepowered:mixin:$mixinVersion") {
+            transitive = false // deps should all be bundled with MC
+        }
+
+        // Mixin needs these (and depends on them but for some reason that's not enough. FG, did you do that?)
+        annotationProcessor 'com.google.code.gson:gson:2.2.4'
+        annotationProcessor 'com.google.guava:guava:21.0'
+        annotationProcessor 'org.ow2.asm:asm-tree:6.2'
+    }
+
+    shadow "com.fasterxml.jackson.core:jackson-core:2.9.3"
+    shadow "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    shadow "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    shadow 'com.github.falsehonesty:asmhelper:1d4cc32e6a'
+    shadow 'com.chattriggers:rhino:1.8.1'
+    shadow 'com.fifesoft:rsyntaxtextarea:3.0.8'
+    shadow 'com.github.falsehonesty:ts-generator:adfb57a8f6'
+}
+
+if (mcVersion <= 10710) {
+    // FG 1.2 adds all MC deps to the compile configuration which we don't want
+    afterEvaluate {
+        // Remove them from the compile and runtime configurations
+        configurations.compile.extendsFrom -= [configurations.minecraft, configurations.minecraftDeps]
+        configurations.runtime.extendsFrom -= [configurations.forgeGradleStartClass]
+        // And add them to the source sets instead
+        sourceSets.main.with {
+            compileClasspath += configurations.minecraft + configurations.minecraftDeps
+            runtimeClasspath += configurations.minecraft + configurations.minecraftDeps + configurations.forgeGradleStartClass
+        }
+        // Also need to reconfigure the reobf task, so it can properly re-obfuscates inherited members
+        tasks.reobf.obfOutput.all { artifact ->
+            artifact.getFile() // force resolve
+            artifact.classpath += configurations.minecraft + configurations.minecraftDeps
+        }
+    }
+
+    // Test sources aren't preprocessed and I can't be bothered to fix that
+    tasks.compileTestJava.onlyIf { false }
+    tasks.compileTestKotlin.onlyIf { false }
+}
+
+if (FABRIC) {
+    tasks.remapJar {
+        addNestedDependencies.set(true)
+        afterEvaluate { // FIXME why does loom overwrite this if we set it immediately?
+            archiveClassifier.set('obf')
+        }
+    }
+}
+
+File configureRelocationOutput = new File(project.buildDir, 'configureRelocation')
+task configureRelocation() {
+    dependsOn tasks.jar
+    dependsOn configurations.shadow
+    outputs.file(configureRelocationOutput)
+    doLast {
+        def pkgs = files(configurations.shadow).filter { it.exists() }.collect {
+            def tree = it.isDirectory() ? fileTree(it) : zipTree(it)
+            def pkgs = [].toSet()
+            tree.visit { file ->
+                if (!file.directory && file.name.endsWith('.class') && file.path.contains('/')) {
+                    def pkg = file.path.substring(0, file.path.lastIndexOf('/')) + '/'
+                    if (pkg.startsWith('com/')) {
+                        if (pkg.startsWith('com/google/')) {
+                            if (!pkg.startsWith('com/google/common')) {
+                                pkgs << pkg.substring(0, pkg.indexOf('/', 'com/google/'.length()))
+                            }
+                        } else if (!pkg.startsWith('com/replaymod')) {
+                            pkgs << pkg.substring(0, pkg.indexOf('/', 4))
+                        }
+                    } else if (pkg.startsWith('net/')) {
+                        if (!pkg.startsWith('net/minecraft')
+                                && !pkg.startsWith('net/fabric')) {
+                            pkgs << pkg.substring(0, pkg.indexOf('/', 'net/'.length()))
+                        }
+                    } else if (pkg.startsWith('org/')) {
+                        if (pkg.startsWith('org/apache/')) {
+                            if (pkg.startsWith('org/apache/commons/')) {
+                                if (!pkg.startsWith('org/apache/commons/io')) {
+                                    pkgs << pkg.substring(0, pkg.indexOf('/', 'org/apache/commons/'.length()))
+                                }
+                            } else if (!pkg.startsWith('org/apache/logging')) {
+                                pkgs << pkg.substring(0, pkg.indexOf('/', 'org/apache/'.length()))
+                            }
+                        } else if (!pkg.startsWith('org/spongepowered')) {
+                            pkgs << pkg.substring(0, pkg.indexOf('/', 4))
+                        }
+                    } else if (pkg.startsWith('it/unimi/dsi/fastutil') && mcVersion >= 11400) {
+                        return // MC uses this as well
+                    } else if (!pkg.startsWith('javax/')) {
+                        // Note: we cannot just use top level packages as those will be too generic and we'll run
+                        // into this long standing bug: https://github.com/johnrengelman/shadow/issues/232
+                        def i = pkg.indexOf('/')
+                        def i2 = pkg.indexOf('/', i + 1)
+                        if (i2 > 0) {
+                            pkgs << pkg.substring(0, i2)
+                        }
+                    }
+                }
+            }
+            pkgs
+        }.flatten().unique()
+        configureRelocationOutput.write(pkgs.join('\n'))
+    }
+}
+
+tasks.removeByName('shadowJar') // we want to base our shadowed jar on the reobfJar output, not the sourceSet output
+task shadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    from { (FABRIC ? tasks.remapJar : tasks.jar).archiveFile.get() }
+    dependsOn { FABRIC ? tasks.remapJar : (mcVersion >= 10800 ? tasks.reobfJar : tasks.reobf) }
+
+    manifest.inheritFrom tasks.jar.manifest
+
+    from project.configurations.shade
+    configurations = [project.configurations.shadow]
+    exclude 'META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+
+    dependsOn tasks.configureRelocation
+    inputs.file(configureRelocationOutput)
+
+    // No need to shadow netty, MC provides it
+    // (actually, pre-1.12 ships a netty which is too old, so we need to shade it there anyway)
+    if (mcVersion >= 11200) {
+        relocate 'com.github.steveice10.netty', 'io.netty'
+        exclude 'com/github/steveice10/netty/**'
+    }
+
+    if (mcVersion >= 11400) {
+        // MC ships this
+        exclude 'it/unimi/dsi/fastutil/**'
+    }
+
+    minimize {
+        exclude(dependency('.*spongepowered:mixin:.*'))
+    }
+}
+tasks.assemble.dependsOn tasks.shadowJar
+
+jar {
+    classifier = "raw"
+
+    if (!FABRIC) {
+        from files(project.mixinRefMap.canonicalPath)
+
+        manifest.attributes(
+                "TweakClass": "com.chattriggers.ctjs.launch.tweaker.CTJSTweaker",
+                "TweakOrder": "0",
+                "FMLCorePluginContainsFMLMod": "true",
+                "FMLCorePlugin": "com.chattriggers.ctjs.launch.plugin.CTJSLoadingPlugin"
+        )
+    }
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property 'version', { project.version }
+    inputs.property 'mcversion', { mcVersionStr }
+
+    // replace stuff in mcmod.info (forge) and fabric.mod.json, nothing else
+    filesMatching(['mcmod.info', 'fabric.mod.json']) {
+        // replace version and mcversion
+        expand 'version': project.version, 'mcversion': mcVersionStr
+    }
+
+    // strip comments from (strict) JSON files
+    filesMatching('pack.mcmeta') {
+        filter { line -> line.trim().startsWith('//') ? '' : line}
+    }
+
+    // exclude mod meta for non-applicable loader
+    if (FABRIC) {
+        exclude 'mcmod.info'
+    } else {
+        exclude 'fabric.mod.json'
+    }
+}
+
+if (FABRIC) {
+    // not required, fabric manages those by itself just fine
+} else if (FG3) {
+    task copySrg(dependsOn: 'createMcpToSrg') {
+        doLast {
+            def tsrg = file(project.tasks.createMcpToSrg.output).readLines()
+            def srg = []
+            def cls = ''
+            for (def line : tsrg) {
+                if (line[0] != '\t') {
+                    srg.add('CL: ' + line)
+                    cls = line.split(' ')[0]
+                } else {
+                    def parts = line.substring(1).split(' ')
+                    if (line.contains('(')) {
+                        srg.add('MD: ' + cls + '/' + parts[0] + ' ' + parts[1] + ' ' + cls + '/' + parts[2] + ' ' + parts[1])
+                    } else {
+                        srg.add('FD: ' + cls + '/' + parts[0] + ' ' + cls + '/' + parts[1])
+                    }
+                }
+            }
+            new File(project.buildDir, 'mcp-srg.srg').write(srg.join('\n'))
+        }
+    }
+    compileJava.dependsOn copySrg
+    compileKotlin.dependsOn copySrg
+} else {
+    task copySrg(type: Copy, dependsOn: 'genSrgs') {
+        from {project.tasks.genSrgs.mcpToSrg}
+        into 'build'
+    }
+    compileJava.dependsOn copySrg
+    compileKotlin.dependsOn copySrg
+}
+
+if (!FABRIC && !FG3) {
+    if (mcVersion <= 10710) {
+        reobf.addExtraSrgFile project.mixinSrg
+    } else {
+        reobfJar.addSecondarySrgFile project.mixinSrg
+    }
+}
+
+defaultTasks 'build'
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/dokka"
+}
+
+//task sourcesJar(type: Jar, dependsOn: classes) {
+//    classifier = 'sources'
+//    from sourceSets.main.allSource
+//}
+//
+//artifacts {
+//    archives sourcesJar
+//}

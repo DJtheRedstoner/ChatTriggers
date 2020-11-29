@@ -1,5 +1,3 @@
-
-
 pluginManagement {
     repositories {
         mavenLocal()
@@ -21,19 +19,16 @@ pluginManagement {
     }
 }
 
-rootProject.buildFileName = "root.gradle.kts"
-
 listOf(
     "1.8.9",
-    "1.12.2",
-    "1.15.2",
-    "1.16.2"
-//    "1.16.2-fabric"
+    "1.12.2"
+//    "1.15.2",
+//    "1.16.2"
+//    "1.16.2-fabric",
 ).forEach { version ->
     include(":$version")
     project(":$version").apply {
         projectDir = file("versions/$version")
-        buildFileName = "../../build.gradle"
+        buildFileName = "../common.gradle"
     }
 }
-

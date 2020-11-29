@@ -7,7 +7,11 @@ import me.falsehonesty.asmhelper.dsl.instructions.*
 
 fun injectEntityPlayer() = inject {
     className = ENTITY_PLAYER
+    //#if MC==10809
     methodName = "dropOneItem"
+    //#else
+    //$$ methodName = "dropItem"
+    //#endif
     methodDesc = "(Z)L$ENTITY_ITEM;"
 
     at = At(

@@ -15,7 +15,11 @@ fun injectGuiMainMenu() = inject {
             Descriptor(
                 "net/minecraftforge/client/ForgeHooksClient",
                 "renderMainMenu",
+                //#if MC==10809
                 "(Lnet/minecraft/client/gui/GuiMainMenu;Lnet/minecraft/client/gui/FontRenderer;II)V"
+                //#else
+                //$$ "(Lnet/minecraft/client/gui/GuiMainMenu;Lnet/minecraft/client/gui/FontRenderer;IILjava/lang/String;)Ljava/lang/String;"
+                //#endif
             )
         )
     )
